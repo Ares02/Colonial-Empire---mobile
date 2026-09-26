@@ -1,4 +1,4 @@
-name: Build ColonialEmpire APK - FINAL FIX
+name: Build ColonialEmpire APK - FINAL FIX V3
 
 on:
   push:
@@ -12,9 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Vytvor projekt z base64 - BEZ CLOUDU - FINAL
+      - name: Vytvor projekt z base64 - BEZ CLOUDU - GOLD
         run: |
-          echo "Vytvarim projekt z base64 - BEZ CLOUDU GOLD"
+          echo "Vytvarim projekt z base64 - BEZ CLOUDU GOLD v1.0"
           cat > /tmp/project.b64 << 'ENDOFFILE_B64'
           UEsDBBQAAAAIAIoBOl39nWJb4gMAAHgGAAAbAAAATkFWT0RfQkVaX0FORFJPSURfU1RVRElPLm1k
           fVTbjuI4EH3PV9ROa1eg6SR9ne3loaUQ0gMDJIgA0oxGIg42YHJxZDu04Ou3nDQ96l1pXqAcl+ty
@@ -576,12 +576,9 @@ jobs:
           YXBwZXIucHJvcGVydGllc1BLBQYAAAAAHQAdADIJAADjcgAAAAA=
           ENDOFFILE_B64
           base64 -d /tmp/project.b64 > /tmp/project.zip
-          ls -lh /tmp/project.zip
           unzip -o /tmp/project.zip -d .
-          ls -lh
-          find app -type f | head -30
           chmod +x gradlew
-          echo "Projekt pripraven BEZ CLOUDU - GOLD"
+          echo "Projekt pripraven"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -589,13 +586,32 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK - OPRAVA bez android-actions
+        run: |
+          echo "Instaluju Android SDK rucne - bez chybove akce"
+          export ANDROID_HOME=$HOME/Android/Sdk
+          export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+          mkdir -p $ANDROID_HOME
+          # Nainstaluj cmdline-tools pokud nejsou
+          if [ ! -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]; then
+            cd /tmp
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
+            unzip -q cmdline.zip
+            mkdir -p $ANDROID_HOME/cmdline-tools/latest
+            mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/ || mv cmdline-tools $ANDROID_HOME/cmdline-tools/latest/ || true
+            rm -rf cmdline.zip cmdline-tools
+          fi
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          echo "SDK ready"
 
-      - name: Build APK
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: assembleDebug --stacktrace
+      - name: Build APK - BEZ CLOUDU
+        run: |
+          export ANDROID_HOME=$HOME/Android/Sdk
+          export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          ./gradlew assembleDebug --stacktrace
 
       - name: Najdi APK
         run: |
@@ -604,7 +620,7 @@ jobs:
           cp "$APK" ColonialEmpire_Studio_Mobile.apk
           ls -lh ColonialEmpire_Studio_Mobile.apk
 
-      - name: Upload APK
+      - name: Upload APK - BEZ CLOUDU GOLD
         uses: actions/upload-artifact@v4
         with:
           name: ColonialEmpire_Studio_Mobile-APK-BEZ-CLOUDU-GOLD
